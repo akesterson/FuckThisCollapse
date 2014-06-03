@@ -124,9 +124,7 @@ class Game:
             [curx + 1, cury],     # --XS-
             [curx, cury + 1]      # --S--
         ]
-        print selectable
         if [x, y] not in selectable:
-            print "Marble at ({}, {}) is not my neighbor".format(x, y)
             return False
         #if self.__curMap__[y][x] != self.__curMap__[cury][curx] :
         #    print "Neighbor at ({}, {}) is type {} while I am {}".format(x, y,  self.__curMap__[cury][curx], self.__curMap__[y][x])
@@ -136,28 +134,16 @@ class Game:
     def __flipMarbles__(self, m1, m2):
         if self.__selectedMarble__ == [-1, -1]:
             return
+        # Skip empty (black) marbles
         if ( ( self.__curMap__[m1[1]][m1[0]][0] == 0 ) or
              ( self.__curMap__[m2[1]][m2[0]][0] == 0 ) ):
-            print "No moves left on one of these marbles"
             return
-        print "Flipping ({} = {}) and ({} = {})".format(
-            m1, 
-            self.__curMap__[m1[1]][m1[0]],
-            m2,
-            self.__curMap__[m2[1]][m2[0]])
+
+        tmp = self.__curMap__[m1[1]][m1[0]]
+        self.__curMap__[m1[1]][m1[0]] = self.__curMap__[m2[1]][m2[0]]
+        self.__curMap__[m2[1]][m2[0]] = tmp
         self.__curMap__[m1[1]][m1[0]][0] -= 1
         self.__curMap__[m2[1]][m2[0]][0] -= 1
-        tmp = self.__curMap__[m1[1]][m1[0]][1]
-        self.__curMap__[m1[1]][m1[0]][1] = self.__curMap__[m2[1]][m2[0]][1]
-        self.__curMap__[m2[1]][m2[0]][1] = tmp
-        tmp = self.__curMap__[m1[1]][m1[0]][0]
-        self.__curMap__[m1[1]][m1[0]][0] = self.__curMap__[m2[1]][m2[0]][0]
-        self.__curMap__[m2[1]][m2[0]][0] = tmp
-        print "Flipped ({} = {}) and ({} = {})".format(
-            m1, 
-            self.__curMap__[m1[1]][m1[0]],
-            m2,
-            self.__curMap__[m2[1]][m2[0]])
 
     def __setMarbleState__(self, x, y, state):
         self.__curMap__[y][x][2] = state
@@ -177,7 +163,6 @@ class Game:
         if self.__curMap__[marble_y][marble_x][1] == 0:
             return False
         if event.button == 1:
-            print "Selected marble [{}, {}]".format(marble_x, marble_y)
             self.__selectedMarble__ = [marble_x, marble_y]
             self.__selectionRect__ = pygame.Rect(
                 (self.__curMapRect__.left + (marble_x * Game.MARBLE_WIDTH)),
@@ -187,7 +172,6 @@ class Game:
             self.__setMarbleState__(marble_x, marble_y, Game.STATE_SELECTED)
         elif event.button in [2, 3]:
             if not self.__canSelectMarble__(marble_x, marble_y):
-                print "Silly rabbit, you can't select that marble!"
                 return
             self.__flipMarbles__(self.__selectedMarble__, [marble_x, marble_y])
         return
