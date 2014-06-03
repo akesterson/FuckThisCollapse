@@ -63,7 +63,8 @@ class Game:
 
         self.__gameFont__ = pygame.font.SysFont(pygame.font.get_default_font(), 18)
 
-        self.__setMap__(maps[2])
+        self.__mapIndex__ = 0
+        self.__setMap__(maps[self.__mapIndex__])
 
     def __load_marbles__(self):
         self.__marbles__.append(None)
@@ -199,7 +200,20 @@ class Game:
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     return
-                if event.type == pygame.MOUSEBUTTONUP:
+                elif event.type == pygame.KEYUP:
+                    if ( (pygame.key.get_pressed()[pygame.K_LCTRL]) and 
+                         (event.key == pygame.K_LEFT) and
+                         (self.__mapIndex__ > 0) ):
+                        self.__mapIndex__ -= 1
+                        self.__setMap__(maps[self.__mapIndex__])
+                    elif ( (pygame.key.get_pressed()[pygame.K_LCTRL]) and 
+                           (event.key == pygame.K_RIGHT) and
+                           (self.__mapIndex__ < (len(maps)-1))):
+                        self.__mapIndex__ += 1
+                        self.__setMap__(maps[self.__mapIndex__])
+                        
+
+                elif event.type == pygame.MOUSEBUTTONUP:
                     self.__mouseClicked__(event)
             pygame.display.update()
         return
