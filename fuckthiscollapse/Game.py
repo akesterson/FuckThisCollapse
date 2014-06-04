@@ -24,6 +24,9 @@ class Game:
 
     MARBLE_WIDTH = 40
     MARBLE_HEIGHT = 40
+    MARBLE_CENTER_X = 20
+    MARBLE_CENTER_Y = 20
+
     COLOR_MAGICPINK = (255, 0, 255, 0)
     COLOR_WHITE = (255, 255, 255, 255)
     COLOR_BLACK = (0, 0, 0, 255)
@@ -35,6 +38,7 @@ class Game:
     STATE_SELECTED = 1 << 1
     STATE_DEAD = 1 << 2
     STATE_PLAYERTOUCHED = 1 << 3
+    STATE_DRAGGING = 1 << 4
 
     M_IDX_MOVES = 0
     M_IDX_TYPE = 1
@@ -137,35 +141,49 @@ class Game:
             ri += 1
         return
 
+    def __draw_marble__(self, mx, my, marble):
+        if ( (marble[Game.M_IDX_TYPE]) and (marble[Game.M_IDX_STATE] != Game.STATE_DEAD)):
+            if self.__hasMarbleState__([mx, my], Game.STATE_DRAGGING):
+                mpos = pygame.mouse.get_pos()
+                x = mpos[Game.P_IDX_X] - Game.MARBLE_CENTER_X
+                y = mpos[Game.P_IDX_Y] - Game.MARBLE_CENTER_Y
+            else:
+                x = marble[Game.M_IDX_POS][Game.P_IDX_X]
+                y = marble[Game.M_IDX_POS][Game.P_IDX_Y]
+            self.__blitTarget__.blit(self.__marbles__[marble[Game.M_IDX_TYPE]], (x, y))
+            text = self.__gameFont__.render("{}".format(marble[Game.M_IDX_MOVES]), 1, Game.COLOR_WHITE)
+            textpos = text.get_rect(right = x + (Game.MARBLE_WIDTH),
+                                    top = y)
+            self.__blitTarget__.blit(text, textpos)
+
+            if Game.DEBUG_MODE:
+                text = self.__gameFont__.render("{}".format(marble[Game.M_IDX_STATE]), 1, Game.COLOR_WHITE)
+                textpos = text.get_rect(left = x,
+                                        bottom = y + Game.MARBLE_HEIGHT)
+                self.__blitTarget__.blit(text, textpos)
+                text = self.__gameFont__.render("{},{}".format(mx, my), 1, Game.COLOR_BLACK)
+                textpos = text.get_rect(centerx = x + (Game.MARBLE_WIDTH/2),
+                                        centery = y + (Game.MARBLE_HEIGHT/2))
+                self.__blitTarget__.blit(text, textpos)
+
     def __draw__(self):
         self.__display__.fill(Game.COLOR_BLACK)
         self.__blitTarget__.fill(Game.COLOR_MAGICPINK)
         if not self.__curMap__:
             return
+        drawLast = []
         ri = 0
         for row in self.__curMap__:
             ci = 0
             for col in row:
-                if ( (col[Game.M_IDX_TYPE]) and (col[Game.M_IDX_STATE] != Game.STATE_DEAD)):
-                    x = col[Game.M_IDX_POS][Game.P_IDX_X]
-                    y = col[Game.M_IDX_POS][Game.P_IDX_Y]
-                    self.__blitTarget__.blit(self.__marbles__[col[Game.M_IDX_TYPE]], (x, y))
-                    text = self.__gameFont__.render("{}".format(col[Game.M_IDX_MOVES]), 1, Game.COLOR_WHITE)
-                    textpos = text.get_rect(right = x + (Game.MARBLE_WIDTH),
-                                            top = y)
-                    self.__blitTarget__.blit(text, textpos)
-
-                    if Game.DEBUG_MODE:
-                        text = self.__gameFont__.render("{}".format(col[Game.M_IDX_STATE]), 1, Game.COLOR_WHITE)
-                        textpos = text.get_rect(left = x,
-                                                bottom = y + Game.MARBLE_HEIGHT)
-                        self.__blitTarget__.blit(text, textpos)
-                        text = self.__gameFont__.render("{},{}".format(ci, ri), 1, Game.COLOR_BLACK)
-                        textpos = text.get_rect(centerx = x + (Game.MARBLE_WIDTH/2),
-                                                centery = y + (Game.MARBLE_HEIGHT/2))
-                        self.__blitTarget__.blit(text, textpos)
+                if self.__hasMarbleState__([ci, ri], Game.STATE_DRAGGING):
+                    drawLast = [ci, ri, col]
+                else:
+                    self.__draw_marble__(ci, ri, col)
                 ci += 1
             ri += 1
+            if drawLast:
+                self.__draw_marble__(drawLast[0], drawLast[1], drawLast[2])
 
         if self.__selectionRect__ :
             self.__blitTarget__.blit(
@@ -179,21 +197,15 @@ class Game:
             return False
         if self.__selectedMarble__ == [-1, -1]:
             return True
-        curx = self.__selectedMarble__[Game.P_IDX_X]
-        cury = self.__selectedMarble__[Game.P_IDX_Y]
-        selectable = [
-            [curx - 1, cury - 1], # -S---
-            [curx, cury - 1],     # --S--
-            [curx + 1, cury - 1], # ---S-
-            [curx - 1, cury],     # -SX--
-            [curx + 1, cury],     # --XS-
-            [curx - 1, cury + 1], # -S---
-            [curx, cury + 1],     # --S--
-            [curx + 1, cury + 1]  # ---S-
-        ]
-        if [x, y] not in selectable:
-            return False
-        return True
+        left = self.__selectedMarble__[Game.P_IDX_X]
+        top = self.__selectedMarble__[Game.P_IDX_Y]
+        if ( left > 0 ):
+            left -= 1
+        if ( top > 0 ):
+            top -= 1
+
+        selectable = pygame.Rect(left, top, 3, 3)
+        return selectable.collidepoint(x, y)
 
     def __flipMarbles__(self, m1, m2, force=False):
         # Skip empty (black) marbles
@@ -253,6 +265,43 @@ class Game:
             Game.MARBLE_HEIGHT)
         self.__addMarbleState__(pos, Game.STATE_SELECTED)
 
+    def __mouseReleased__(self, event):
+        mouse_x = event.pos[Game.P_IDX_X]
+        mouse_y = event.pos[Game.P_IDX_Y]
+        marble_x = ( (mouse_x - self.__curMapRect__.left) / Game.MARBLE_WIDTH)
+        marble_y = ( (mouse_y - self.__curMapRect__.top) / Game.MARBLE_HEIGHT)
+
+        if ( ( not self.__curMapRect__.collidepoint((mouse_x, mouse_y)))  or
+             (self.__curMap__[marble_y][marble_x][Game.M_IDX_TYPE] == 0 ) ):
+            print "Player clicked outside the map or on an empty square"
+            if self.__curMap__[self.__selectedMarble__[Game.P_IDX_Y]][self.__selectedMarble__[Game.P_IDX_X]][2] == Game.STATE_SELECTED :
+                self.__curMap__[self.__selectedMarble__[Game.P_IDX_Y]][self.__selectedMarble__[Game.P_IDX_X]][2] = Game.STATE_NONE
+            self.__delMarbleState__(self.__selectedMarble__, Game.STATE_DRAGGING)
+            self.__setSelectedMarble__([-1, -1])
+            self.__selectionRect__ = None
+            return
+
+        if event.button == 1:
+            if self.__hasMarbleState__(self.__selectedMarble__,
+                                       Game.STATE_DRAGGING):
+                print "Player released and was dragging"
+                self.__delMarbleState__([self.__selectedMarble__[Game.P_IDX_X],
+                                         self.__selectedMarble__[Game.P_IDX_Y]],
+                                        Game.STATE_DRAGGING)
+                flipMarble = self.__selectedMarble__
+                if not self.__canSelectMarble__(marble_x, marble_y):
+                    self.__setSelectedMarble__([-1, -1])
+                    return
+                self.__setSelectedMarble__([-1, -1])
+                self.__flipMarbles__(flipMarble, [marble_x, marble_y])
+                self.__setGroupState__()
+            else:
+                print "Player clicked and released but was not dragging"
+                self.__setSelectedMarble__([marble_x, marble_y])
+                self.__addMarbleState__([marble_x, marble_y], Game.STATE_PLAYERTOUCHED)
+                self.__setGroupState__()
+        return
+
     def __mouseClicked__(self, event):
         mouse_x = event.pos[Game.P_IDX_X]
         mouse_y = event.pos[Game.P_IDX_Y]
@@ -261,26 +310,14 @@ class Game:
 
         if ( ( not self.__curMapRect__.collidepoint((mouse_x, mouse_y)))  or
              (self.__curMap__[marble_y][marble_x][Game.M_IDX_TYPE] == 0 ) ):
-            if self.__curMap__[self.__selectedMarble__[Game.P_IDX_Y]][self.__selectedMarble__[Game.P_IDX_X]][2] == Game.STATE_SELECTED :
-                self.__curMap__[self.__selectedMarble__[Game.P_IDX_Y]][self.__selectedMarble__[Game.P_IDX_X]][2] = Game.STATE_NONE
-            self.__setSelectedMarble__([-1, -1])
-            self.__selectionRect__ = None
+            # We can't drag empty space or space outside the map
             return
-        if self.__curMap__[marble_y][marble_x][Game.M_IDX_TYPE] == 0:
-            return False
-        if event.button == 1:
-            self.__setSelectedMarble__([marble_x, marble_y])
-            self.__addMarbleState__([marble_x, marble_y], Game.STATE_PLAYERTOUCHED)
-            self.__setGroupState__()
-        elif event.button in [2, 3]:
-            if not self.__canSelectMarble__(marble_x, marble_y):
-                return
-            self.__delMarbleState__(self.__selectedMarble__, Game.STATE_SELECTED)
-            self.__flipMarbles__(self.__selectedMarble__, [marble_x, marble_y])
-            self.__setSelectedMarble__([marble_x, marble_y])
-            self.__addMarbleState__([marble_x, marble_y], Game.STATE_PLAYERTOUCHED)
-            self.__setGroupState__()
-        return
+        
+        if not self.__canSelectMarble__(marble_x, marble_y):
+            return
+        self.__setSelectedMarble__([marble_x, marble_y])
+        self.__addMarbleState__([marble_x, marble_y], Game.STATE_DRAGGING)
+        self.__addMarbleState__([marble_x, marble_y], Game.STATE_PLAYERTOUCHED)
 
     def __setGroupState__(self, zap=False):
         groups = {
@@ -383,8 +420,9 @@ class Game:
                         self.__setMap__(maps[self.__mapIndex__])
                         self.__setSelectedMarble__([-1, -1])
                         
-
-                elif event.type == pygame.MOUSEBUTTONUP:
+                elif event.type == pygame.MOUSEBUTTONDOWN:
                     self.__mouseClicked__(event)
+                elif event.type == pygame.MOUSEBUTTONUP:
+                    self.__mouseReleased__(event)
             pygame.display.update()
         return
