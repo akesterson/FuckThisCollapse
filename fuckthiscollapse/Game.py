@@ -1,25 +1,159 @@
 import pygame
-import json
-import copy
 import time
 import random
+import os
 
-maps = [
+levelTitles = [
+    [
+        [1,0,0, 0, 1,3,2, 0, 1,0,3, 0, 3,1,4, 0, 4,0,0, 0, 0,1,0],
+        [2,0,0, 0, 2,0,0, 0, 3,0,4, 0, 1,0,0, 0, 2,0,0, 0, 2,3,0],
+        [1,0,0, 0, 3,1,4, 0, 4,0,2, 0, 2,4,2, 0, 1,0,0, 0, 0,1,0],
+        [3,0,0, 0, 4,0,0, 0, 0,1,0, 0, 4,0,0, 0, 3,0,0, 0, 0,4,0],
+        [4,3,2, 0, 1,2,1, 0, 0,3,0, 0, 3,1,2, 0, 4,1,2, 0, 1,2,4],
+    ],
+    [
+        [1,0,0, 0, 1,3,2, 0, 1,0,3, 0, 3,1,4, 0, 4,0,0, 0, 0,1,0],
+        [2,0,0, 0, 2,0,0, 0, 3,0,4, 0, 1,0,0, 0, 2,0,0, 0, 2,0,3],
+        [1,0,0, 0, 3,1,4, 0, 4,0,2, 0, 2,4,2, 0, 1,0,0, 0, 0,0,1],
+        [3,0,0, 0, 4,0,0, 0, 0,1,0, 0, 4,0,0, 0, 3,0,0, 0, 1,2,0],
+        [4,3,2, 0, 1,2,1, 0, 0,3,0, 0, 3,1,2, 0, 4,1,2, 0, 3,2,1]
+    ],
+    [
+        [1,0,0, 0, 1,3,2, 0, 1,0,3, 0, 3,1,4, 0, 4,0,0, 0, 4,1,3],
+        [2,0,0, 0, 2,0,0, 0, 3,0,4, 0, 1,0,0, 0, 2,0,0, 0, 0,0,3],
+        [1,0,0, 0, 3,1,4, 0, 4,0,2, 0, 2,4,2, 0, 1,0,0, 0, 1,1,2],
+        [3,0,0, 0, 4,0,0, 0, 0,1,0, 0, 4,0,0, 0, 3,0,0, 0, 0,0,4],
+        [4,3,2, 0, 1,2,1, 0, 0,3,0, 0, 3,1,2, 0, 4,1,2, 0, 3,2,1],
+    ],
+    [
+        [1,0,0, 0, 1,3,2, 0, 1,0,3, 0, 3,1,4, 0, 4,0,0, 0, 4,0,2],
+        [2,0,0, 0, 2,0,0, 0, 3,0,4, 0, 1,0,0, 0, 2,0,0, 0, 2,0,3],
+        [1,0,0, 0, 3,1,4, 0, 4,0,2, 0, 2,4,2, 0, 1,0,0, 0, 3,1,2],
+        [3,0,0, 0, 4,0,0, 0, 0,1,0, 0, 4,0,0, 0, 3,0,0, 0, 0,0,3],
+        [4,3,2, 0, 1,2,1, 0, 0,3,0, 0, 3,1,2, 0, 4,1,2, 0, 0,0,4],
+    ],
+    [
+        [1,0,0, 0, 1,3,2, 0, 1,0,3, 0, 3,1,4, 0, 4,0,0, 0, 1,2,1],
+        [2,0,0, 0, 2,0,0, 0, 3,0,4, 0, 1,0,0, 0, 2,0,0, 0, 4,0,0],
+        [1,0,0, 0, 3,1,4, 0, 4,0,2, 0, 2,4,2, 0, 1,0,0, 0, 1,3,4],
+        [3,0,0, 0, 4,0,0, 0, 0,1,0, 0, 4,0,0, 0, 3,0,0, 0, 0,0,1],
+        [4,3,2, 0, 1,2,1, 0, 0,3,0, 0, 3,1,2, 0, 4,1,2, 0, 4,3,2],
+    ],
+    [
+        [1,0,0, 0, 1,3,2, 0, 1,0,3, 0, 3,1,4, 0, 4,0,0, 0, 1,1,4],
+        [2,0,0, 0, 2,0,0, 0, 3,0,4, 0, 1,0,0, 0, 2,0,0, 0, 2,0,0],
+        [1,0,0, 0, 3,1,4, 0, 4,0,2, 0, 2,4,2, 0, 1,0,0, 0, 1,3,1],
+        [3,0,0, 0, 4,0,0, 0, 0,1,0, 0, 4,0,0, 0, 3,0,0, 0, 4,0,1],
+        [4,3,2, 0, 1,2,1, 0, 0,3,0, 0, 3,1,2, 0, 4,1,2, 0, 3,2,4],
+    ],
+    [
+        [1,0,0, 0, 1,3,2, 0, 1,0,3, 0, 3,1,4, 0, 4,0,0, 0, 3,1,4],
+        [2,0,0, 0, 2,0,0, 0, 3,0,4, 0, 1,0,0, 0, 2,0,0, 0, 0,0,2],
+        [1,0,0, 0, 3,1,4, 0, 4,0,2, 0, 2,4,2, 0, 1,0,0, 0, 0,4,0],
+        [3,0,0, 0, 4,0,0, 0, 0,1,0, 0, 4,0,0, 0, 3,0,0, 0, 0,3,0],
+        [4,3,2, 0, 1,2,1, 0, 0,3,0, 0, 3,1,2, 0, 4,1,2, 0, 0,1,0],
+    ]
 ]
-
-random.seed(time.time())
-for i in range(0, 16):
-    newmap = []
-    for i in range(0, 10):
-        newrow = []
-        for i in range(0, 16):
-            newrow.append(random.randint(1, 4))
-        newmap.append(newrow)
-    maps.append(newmap)
+        
+maps = [                                                                   
+    [                                                                      
+        [4,2,1,3,2,1],                                                     
+        [3,4,4,4,1,3],                                                     
+        [2,3,2,3,3,3],                                                     
+        [4,4,3,1,3,3],                                                     
+        [3,1,4,2,2,1],                                                     
+        [2,3,1,1,4,2]
+    ],                                                                     
+    [                                                                      
+        [4,1,3,4,2,2,4],                                                   
+        [1,4,4,2,1,4,4],                                                   
+        [1,1,4,2,1,3,1],                                                   
+        [4,1,1,3,1,3,4],                                                   
+        [2,4,4,3,1,4,2],                                                   
+        [4,3,2,4,3,4,3],                                                   
+        [3,4,1,3,3,3,3]
+    ],                                                                     
+    [                                                                      
+        [4,1,2,2,4,3,1,3],                                                 
+        [2,3,1,3,2,1,3,1],                                                 
+        [3,4,1,3,2,4,1,1],                                                 
+        [4,3,1,3,4,1,1,4],                                                 
+        [2,4,2,1,1,2,4,1],                                                 
+        [1,3,2,1,2,1,1,2],                                                 
+        [4,3,1,3,4,3,1,2],                                                 
+        [1,1,3,2,4,2,2,1]
+    ],                                                                     
+    [                                                                      
+        [2,3,3,3,2,2,3,4,4],                                               
+        [4,4,3,3,1,3,2,1,3],                                               
+        [4,3,4,2,1,3,4,1,2],                                               
+        [4,3,1,1,1,1,3,1,1],                                               
+        [4,2,3,3,1,1,4,4,2],                                               
+        [2,4,2,2,3,1,2,2,2],                                               
+        [1,4,3,2,4,4,1,3,1],                                               
+        [1,3,4,4,2,1,3,4,1],                                               
+        [2,1,2,2,1,4,4,3,2]
+    ],                                                                     
+    [                                                                      
+        [2,2,3,4,4,1,3,4,3,1],                                             
+        [1,2,1,4,3,1,4,1,1,1],                                             
+        [1,2,3,4,2,4,1,1,3,3],                                             
+        [3,4,1,4,2,4,4,2,4,4],                                             
+        [3,3,1,1,2,1,2,2,2,1],                                             
+        [4,1,2,4,4,2,3,4,1,1],                                             
+        [2,2,4,3,2,4,3,1,1,1],                                             
+        [4,3,1,2,3,1,1,1,3,3],                                             
+        [2,2,3,3,1,4,1,3,1,1],                                             
+        [3,3,4,2,2,4,3,4,1,4]
+    ],                                                                     
+    [                                                                      
+        [1,1,1,4,3,2,2,2,4,2,1],                                           
+        [2,3,3,2,2,2,1,2,1,1,1],                                           
+        [4,3,2,3,1,3,2,4,4,2,2],                                           
+        [1,4,3,2,2,2,2,1,3,3,3],                                           
+        [3,2,2,3,1,4,3,1,4,3,2],                                           
+        [3,1,1,1,1,3,1,2,3,2,4],                                           
+        [1,2,4,1,1,2,1,1,4,1,4],                                           
+        [3,2,4,1,3,2,3,3,4,1,4],                                           
+        [2,4,3,4,2,3,1,2,1,2,3],                                           
+        [1,2,1,2,3,3,4,4,3,2,3],                                           
+        [3,3,3,3,3,4,1,4,4,2,3]
+    ],                                                                     
+    [                                                                      
+        [4,4,1,3,2,4,4,2,3,2,2,3],                                         
+        [2,4,1,3,2,3,3,4,4,3,1,2],                                         
+        [1,3,3,4,3,1,4,3,1,1,3,2],                                         
+        [4,2,2,1,2,2,3,3,1,3,4,1],                                         
+        [3,2,2,3,4,4,2,2,3,2,2,2],                                         
+        [1,1,3,3,1,4,3,2,2,4,4,2],                                         
+        [3,1,3,3,3,2,2,3,3,1,4,3],                                         
+        [2,3,2,3,4,4,3,3,3,4,2,3],                                         
+        [1,4,2,3,2,1,3,4,2,3,4,2],                                         
+        [1,2,3,2,1,4,2,2,3,1,3,3],                                         
+        [4,4,4,2,2,4,3,4,2,2,2,1],                                         
+        [4,1,1,3,2,1,3,3,1,1,4,2]
+    ],
+    [                                                                      
+        [4,4,1,3,2,4,4,2,3,2,2,3,2],                                         
+        [2,4,1,3,2,3,3,4,4,3,1,2,3],                                         
+        [1,3,3,4,3,1,4,3,1,1,3,2,1],                                         
+        [4,2,2,1,2,2,3,3,1,3,4,1,1],                                         
+        [3,2,2,3,4,4,2,2,3,2,2,2,3],                                         
+        [1,1,3,3,1,4,3,2,2,4,4,2,3],                                         
+        [3,1,3,3,3,2,2,3,3,1,4,3,2],                                         
+        [2,3,2,3,4,4,3,3,3,4,2,3,4],                                         
+        [1,4,2,3,2,1,3,4,2,3,4,2,4],                                         
+        [1,2,3,2,1,4,2,2,3,1,3,3,1],                                         
+        [4,4,4,2,2,4,3,4,2,2,2,1,4],                                         
+        [4,1,1,3,2,1,3,3,1,1,4,2,2],
+        [3,2,2,3,4,4,2,2,3,2,2,2,3]                                         
+    ]
+]                                                                          
 
 class Game:
     # Debug flags, disable these before production
-    DEBUG_MODE = True
+    DEBUG_MODE = False
+    DRAW_MOVES = True
     # -----
 
     MARBLE_WIDTH = 40
@@ -30,8 +164,8 @@ class Game:
     COLOR_MAGICPINK = (255, 0, 255, 0)
     COLOR_WHITE = (255, 255, 255, 255)
     COLOR_BLACK = (0, 0, 0, 255)
-    SCREEN_WIDTH = 800
-    SCREEN_HEIGHT = 600
+    SCREEN_WIDTH = 960
+    SCREEN_HEIGHT = 540
 
     STATE_NONE = 0
     STATE_FALLING = 1
@@ -39,6 +173,11 @@ class Game:
     STATE_DEAD = 1 << 2
     STATE_PLAYERTOUCHED = 1 << 3
     STATE_DRAGGING = 1 << 4
+
+    STATE_GAME_MAIN = 1 << 1
+    STATE_GAME_TITLE = 1 << 2
+    STATE_GAME_TITLE_FALLING = 1 << 3
+    STATE_GAME_WIN = 1 << 5
 
     M_IDX_MOVES = 0
     M_IDX_TYPE = 1
@@ -49,13 +188,25 @@ class Game:
     P_IDX_X = 0
     P_IDX_Y = 1
 
+    VELOCITY_CUMULATIVE = 1
+    VELOCITY_STATIC = 2
+
     def __init__(self):
         pygame.init()
+        pygame.mixer.init()
+        self.__velocity_mode__ = Game.VELOCITY_CUMULATIVE
+        self.__gamestate__ = Game.STATE_GAME_TITLE
         self.__display__ = pygame.display.set_mode((Game.SCREEN_WIDTH, Game.SCREEN_HEIGHT))
         self.__blitTarget__ = self.__display__.convert_alpha()
         self.__marbles__ = []
         pygame.display.set_caption("Fuck This Collapse")
         self.__load_marbles__()
+        self.__sound_falling__ = pygame.mixer.Sound(os.path.join('snd', 'marblefall.wav'))
+        self.__sound_click__ = pygame.mixer.Sound(os.path.join('snd', 'marbleclick.wav'))
+        self.__sound_level__ = pygame.mixer.Sound(os.path.join('snd', 'newlevel.wav'))
+        pygame.mixer.music.load(os.path.join('snd', 'POL-lurking-short.wav'))
+        pygame.mixer.music.play(-1)
+
         self.__curMap__ = None
         self.__curMapRect__ = None
         self.__moves__ = 0
@@ -72,8 +223,7 @@ class Game:
         self.__gameFont__ = pygame.font.SysFont(pygame.font.get_default_font(), 18)
         self.__debugFont__ = pygame.font.SysFont(pygame.font.get_default_font(), 12)
         self.__mapIndex__ = 0
-        self.__setMap__(maps[self.__mapIndex__])
-        #self.__setGroupState__(zap=True)
+        self.__setMap__(levelTitles[self.__mapIndex__], isTitle = True)
 
     def __load_marbles__(self):
         self.__marbles__.append(None)
@@ -82,7 +232,7 @@ class Game:
         self.__marbles__.append(pygame.image.load('gfx/SwirlyEyeball.png'))
         self.__marbles__.append(pygame.image.load('gfx/ZebraGum.png'))
 
-    def __setMap__(self, maparray):
+    def __setMap__(self, maparray, isTitle=False):
         self.__curMap__ = []
         self.__curMapRect__ = pygame.Rect(
             ((Game.SCREEN_WIDTH - (Game.MARBLE_WIDTH * len(maparray[0])))/2),
@@ -91,8 +241,18 @@ class Game:
             (Game.MARBLE_HEIGHT * len(maparray))
         )
 
+        initState = Game.STATE_NONE
         x = self.__curMapRect__.left
         y = self.__curMapRect__.top
+        self.__gamestate__ = Game.STATE_GAME_MAIN
+        self.__velocity_mode__ = Game.VELOCITY_CUMULATIVE
+        Game.DRAW_MOVES = True
+
+        if isTitle:
+            Game.DRAW_MOVES = False
+            self.__gamestate__ = Game.STATE_GAME_TITLE
+            self.__sound_level__.play()
+
         for row in maparray:
             x = self.__curMapRect__.left
             mrow = []
@@ -101,13 +261,18 @@ class Game:
                 mrow.append(
                     [self.__maxMarbleMoves__, 
                      col, 
-                     Game.STATE_NONE, 
+                     initState, 
                      [x, y], 
-                     [0, 0]])
+                     [0.0, 0.0]])
                 x += Game.MARBLE_WIDTH
             y += Game.MARBLE_HEIGHT
 
     def __update__(self):
+        if self.__gamestate__ == Game.STATE_GAME_WIN:
+            return
+
+        all_are_dead = True
+
         for ri in range(len(self.__curMap__)-1, -1, -1):
             row = self.__curMap__[ri]
             ci = 0
@@ -116,33 +281,45 @@ class Game:
                     if ( self.__curMap__[ri][ci][Game.M_IDX_TYPE] == 0 ):
                         self.__curMap__[ri][ci][Game.M_IDX_STATE] = Game.STATE_DEAD
                     elif ( self.__hasMarbleState__([ci, ri], Game.STATE_FALLING) ):
-                        if ( col[Game.M_IDX_POS][Game.P_IDX_Y] > 800 ):
-                            self.__curMap__[ri][ci][Game.M_IDX_STATE] = Game.STATE_DEAD
+                        all_are_dead = False
+                        if ( col[Game.M_IDX_POS][Game.P_IDX_Y] > Game.SCREEN_HEIGHT ):
+                            self.__sound_falling__.play()
+                            self.__curMap__[ri][ci] = [99999999, 
+                                                       0,
+                                                       Game.STATE_DEAD, 
+                                                       [ self.__curMapRect__.left + (ci * Game.MARBLE_WIDTH),
+                                                         self.__curMapRect__.top + (ri * Game.MARBLE_HEIGHT) ],
+                                                       [0, 0]
+                                                   ]
                             continue
-                        col[Game.M_IDX_VEL][Game.P_IDX_Y] += 1
+                        col[Game.M_IDX_VEL][Game.P_IDX_Y] += 0.2
 
                         # OH GOD, MY EYES
                         nextri = (col[Game.M_IDX_POS][Game.P_IDX_Y] + (Game.MARBLE_HEIGHT)) / Game.MARBLE_HEIGHT
                         if ( ( (nextri) >= (len(self.__curMap__)) ) or
                              ( self.__hasMarbleState__([ci, nextri], Game.STATE_FALLING) ) or
                              ( self.__hasMarbleState__([ci, nextri], Game.STATE_DEAD) ) ):
-                            col[Game.M_IDX_POS][Game.P_IDX_Y] += col[Game.M_IDX_VEL][Game.P_IDX_Y]
-                        elif ( ( ri != (nextri-1 ) ) and 
-                               ( not self.__hasMarbleState__([ci, nextri], Game.STATE_FALLING) ) and
-                               ( not self.__hasMarbleState__([ci, nextri], Game.STATE_DEAD) ) ):
-                            col[Game.M_IDX_POS][Game.P_IDX_Y] = ((nextri-1) * Game.MARBLE_HEIGHT)
-                            self.__delMarbleState__([ci, ri], Game.STATE_FALLING)
-                            self.__flipMarbles__([ci, ri], [ci, nextri-1])
+                            col[Game.M_IDX_POS][Game.P_IDX_Y] += int(col[Game.M_IDX_VEL][Game.P_IDX_Y])
                         else:
-                            self.__delMarbleState__([ci, ri], Game.STATE_FALLING)
+                            self.__flipMarbles__([ci, ri], [ci, nextri-1])
+                            self.__delMarbleState__([ci, nextri-1], Game.STATE_FALLING)
                         # --- THE GOGGLES DO NOTHING
-
+                    elif ( not self.__hasMarbleState__([ci, ri], Game.STATE_DEAD) ):
+                        all_are_dead = False
                 ci += 1
             ri += 1
+        if ( all_are_dead ) and ( self.__gamestate__ == Game.STATE_GAME_TITLE_FALLING ):
+            self.__setMap__(maps[self.__mapIndex__])
+        elif ( all_are_dead ) and ( self.__gamestate__ == Game.STATE_GAME_MAIN ):
+            if ( (self.__mapIndex__ + 1) >= (len(maps)-1) ):
+                self.__gamestate__ = Game.STATE_GAME_WIN
+                return
+            self.__mapIndex__ += 1
+            self.__setMap__(levelTitles[self.__mapIndex__], isTitle = True)
         return
 
     def __draw_marble__(self, mx, my, marble):
-        if ( (marble[Game.M_IDX_TYPE]) and (marble[Game.M_IDX_STATE] != Game.STATE_DEAD)):
+        if ( (marble[Game.M_IDX_TYPE] or Game.DEBUG_MODE ) and (marble[Game.M_IDX_STATE] != Game.STATE_DEAD)):
             if self.__hasMarbleState__([mx, my], Game.STATE_DRAGGING):
                 mpos = pygame.mouse.get_pos()
                 x = mpos[Game.P_IDX_X] - Game.MARBLE_CENTER_X
@@ -150,11 +327,13 @@ class Game:
             else:
                 x = marble[Game.M_IDX_POS][Game.P_IDX_X]
                 y = marble[Game.M_IDX_POS][Game.P_IDX_Y]
-            self.__blitTarget__.blit(self.__marbles__[marble[Game.M_IDX_TYPE]], (x, y))
-            text = self.__gameFont__.render("{}".format(marble[Game.M_IDX_MOVES]), 1, Game.COLOR_WHITE)
-            textpos = text.get_rect(right = x + (Game.MARBLE_WIDTH),
-                                    top = y)
-            self.__blitTarget__.blit(text, textpos)
+            if ( marble[Game.M_IDX_TYPE] ):
+                self.__blitTarget__.blit(self.__marbles__[marble[Game.M_IDX_TYPE]], (x, y))
+            if ( Game.DRAW_MOVES ):
+                text = self.__gameFont__.render("{}".format(marble[Game.M_IDX_MOVES]), 1, Game.COLOR_WHITE)
+                textpos = text.get_rect(right = x + (Game.MARBLE_WIDTH),
+                                        top = y)
+                self.__blitTarget__.blit(text, textpos)
 
             if Game.DEBUG_MODE:
                 text = self.__gameFont__.render("{}".format(marble[Game.M_IDX_STATE]), 1, Game.COLOR_WHITE)
@@ -169,8 +348,41 @@ class Game:
     def __draw__(self):
         self.__display__.fill(Game.COLOR_BLACK)
         self.__blitTarget__.fill(Game.COLOR_MAGICPINK)
+
+        if self.__gamestate__ == Game.STATE_GAME_WIN:
+            text = self.__gameFont__.render("CONGLATURATIONS! YOU HAVE COMPLETED A GREAT GAME!", 1, Game.COLOR_WHITE)
+            textpos = text.get_rect(centerx = Game.SCREEN_WIDTH / 2,
+                                    centery = Game.SCREEN_HEIGHT / 2)
+            self.__blitTarget__.blit(text, textpos)
+
+            text = self.__gameFont__.render("NOW GO, AND REST OUR HEROS!", 1, Game.COLOR_WHITE)
+            textpos = text.get_rect(centerx = Game.SCREEN_WIDTH / 2,
+                                    centery = ( Game.SCREEN_HEIGHT / 2) + 40)
+            self.__blitTarget__.blit(text, textpos)
+
+            self.__display__.blit(self.__blitTarget__, (0, 0))
+            return
+
         if not self.__curMap__:
             return
+
+        if self.__gamestate__ == Game.STATE_GAME_MAIN and self.__mapIndex__ == 0:
+            y = Game.SCREEN_HEIGHT / 2
+            for textline in ["* Make vertical lines of 3 marbles of the same color",
+                             "* Click and Drag to Move Marbles",
+                             "* Marbles can move horizontal, vertical, and diagonal",
+                             "* Marbles can move one space at a time only",
+                             "* Lines will collapse onto marbles beneath them",
+                             "* Lines will fall completely if there is nothing below them",
+                             "* The number shows how many times a marble can be moved",
+                             "* Levels end when no more moves can be made",
+                             "* Get as many lines off the screen as you can"]:
+                text = self.__gameFont__.render(textline, 1, Game.COLOR_WHITE)
+                textpos = text.get_rect(left = (Game.SCREEN_WIDTH / 3), 
+                                        centery = y)
+                self.__blitTarget__.blit(text, textpos)
+                y += textpos.height
+
         drawLast = []
         ri = 0
         for row in self.__curMap__:
@@ -190,10 +402,33 @@ class Game:
                 self.__selectionSurface__, 
                 (self.__selectionRect__.left, self.__selectionRect__.top)
                 )
+
+        if self.__gamestate__ == Game.STATE_GAME_TITLE and self.__mapIndex__ == 0:
+            text = self.__gameFont__.render("Fuck This Collapse", 1, Game.COLOR_WHITE)
+            textpos = text.get_rect(centerx = Game.SCREEN_WIDTH / 2,
+                                    centery = Game.SCREEN_HEIGHT / 2)
+            self.__blitTarget__.blit(text, textpos)
+
+            text = self.__gameFont__.render("for Fuck This Jam", 1, Game.COLOR_WHITE)
+            textpos = text.get_rect(centerx = Game.SCREEN_WIDTH / 2,
+                                    centery = ( Game.SCREEN_HEIGHT / 2) + (textpos.height * 2))
+            self.__blitTarget__.blit(text, textpos)
+
+            text = self.__gameFont__.render("Andrew Kesterson <andrew@aklabs.net>", 1, Game.COLOR_WHITE)
+            textpos = text.get_rect(centerx = Game.SCREEN_WIDTH / 2,
+                                    centery = ( Game.SCREEN_HEIGHT / 2) + (textpos.height * 3))
+            self.__blitTarget__.blit(text, textpos)
+
+            text = self.__gameFont__.render("https://www.github.com/akesterson/", 1, Game.COLOR_WHITE)
+            textpos = text.get_rect(centerx = Game.SCREEN_WIDTH / 2,
+                                    centery = ( Game.SCREEN_HEIGHT / 2) + (textpos.height * 4))
+            self.__blitTarget__.blit(text, textpos)
+
         self.__display__.blit(self.__blitTarget__, (0, 0))
 
     def __canSelectMarble__(self, x, y):
-        if self.__curMap__[y][x][Game.M_IDX_STATE] == Game.STATE_DEAD:
+        if ( (self.__curMap__[y][x][Game.M_IDX_STATE] == Game.STATE_DEAD) and 
+             (not self.__hasMarbleState__(self.__selectedMarble__, Game.STATE_DRAGGING)) ):
             return False
         if self.__selectedMarble__ == [-1, -1]:
             return True
@@ -208,9 +443,15 @@ class Game:
         return selectable.collidepoint(x, y)
 
     def __flipMarbles__(self, m1, m2, force=False):
-        # Skip empty (black) marbles
-        if ( ( self.__curMap__[m1[Game.P_IDX_Y]][m1[Game.P_IDX_X]][Game.M_IDX_TYPE] == 0 ) or
-             ( self.__curMap__[m2[Game.P_IDX_Y]][m2[Game.P_IDX_X]][Game.M_IDX_TYPE] == 0 ) ):
+        if ( m1 == m2 ):
+            return
+        # Skip empty (black) marbles (unless we're dragging or falling)
+        if ( ( not self.__hasMarbleState__(self.__selectedMarble__, Game.STATE_DRAGGING)) and
+             ( ( not self.__hasMarbleState__(m1, Game.STATE_FALLING)) and
+               ( not self.__hasMarbleState__(m2, Game.STATE_FALLING)) ) and
+             ( ( self.__curMap__[m1[Game.P_IDX_Y]][m1[Game.P_IDX_X]][Game.M_IDX_TYPE] == 0 ) or
+               ( self.__curMap__[m2[Game.P_IDX_Y]][m2[Game.P_IDX_X]][Game.M_IDX_TYPE] == 0 ) )
+           ):
             return
         if ( ( self.__curMap__[m1[Game.P_IDX_Y]][m1[Game.P_IDX_X]][Game.M_IDX_MOVES] <= 0 ) or
              ( self.__curMap__[m2[Game.P_IDX_Y]][m2[Game.P_IDX_X]][Game.M_IDX_MOVES] <= 0 ) ):
@@ -221,11 +462,13 @@ class Game:
         self.__curMap__[m1[Game.P_IDX_Y]][m1[Game.P_IDX_X]] = self.__curMap__[m2[Game.P_IDX_Y]][m2[Game.P_IDX_X]]
         self.__curMap__[m2[Game.P_IDX_Y]][m2[Game.P_IDX_X]] = tmp
 
-        # Swap positions of the marbles
-        tmp = self.__curMap__[m1[Game.P_IDX_Y]][m1[Game.P_IDX_X]][Game.M_IDX_POS]
-        self.__curMap__[m1[Game.P_IDX_Y]][m1[Game.P_IDX_X]][Game.M_IDX_POS] = self.__curMap__[m2[Game.P_IDX_Y]][m2[Game.P_IDX_X]][Game.M_IDX_POS]
-        self.__curMap__[m2[Game.P_IDX_Y]][m2[Game.P_IDX_X]][Game.M_IDX_POS] = tmp
-
+        # FIX positions of the marbles
+        for m in [m1, m2]:
+            self.__curMap__[m[Game.P_IDX_Y]][m[Game.P_IDX_X]][Game.M_IDX_POS] = [
+                self.__curMapRect__.left + (m[Game.P_IDX_X] * Game.MARBLE_WIDTH),
+                self.__curMapRect__.top + (m[Game.P_IDX_Y] * Game.MARBLE_HEIGHT)
+            ]
+                
         # Decrement movecount remaining on both marbles
         self.__curMap__[m1[Game.P_IDX_Y]][m1[Game.P_IDX_X]][Game.M_IDX_MOVES] -= 1
         self.__curMap__[m2[Game.P_IDX_Y]][m2[Game.P_IDX_X]][Game.M_IDX_MOVES] -= 1
@@ -266,16 +509,25 @@ class Game:
         self.__addMarbleState__(pos, Game.STATE_SELECTED)
 
     def __mouseReleased__(self, event):
+        if self.__gamestate__ == Game.STATE_GAME_WIN:
+            return
+        elif self.__gamestate__ == Game.STATE_GAME_TITLE:
+            return
+        elif self.__gamestate__ == Game.STATE_GAME_TITLE_FALLING:
+            return
+
+        self.__sound_click__.play()
+
         mouse_x = event.pos[Game.P_IDX_X]
         mouse_y = event.pos[Game.P_IDX_Y]
         marble_x = ( (mouse_x - self.__curMapRect__.left) / Game.MARBLE_WIDTH)
         marble_y = ( (mouse_y - self.__curMapRect__.top) / Game.MARBLE_HEIGHT)
 
-        if ( ( not self.__curMapRect__.collidepoint((mouse_x, mouse_y)))  or
-             (self.__curMap__[marble_y][marble_x][Game.M_IDX_TYPE] == 0 ) ):
-            print "Player clicked outside the map or on an empty square"
-            if self.__curMap__[self.__selectedMarble__[Game.P_IDX_Y]][self.__selectedMarble__[Game.P_IDX_X]][2] == Game.STATE_SELECTED :
-                self.__curMap__[self.__selectedMarble__[Game.P_IDX_Y]][self.__selectedMarble__[Game.P_IDX_X]][2] = Game.STATE_NONE
+        if ( ( not self.__curMapRect__.collidepoint((mouse_x, mouse_y)) )  or
+             ( (not self.__hasMarbleState__(self.__selectedMarble__, Game.STATE_DRAGGING)) and
+               self.__curMap__[marble_y][marble_x][Game.M_IDX_TYPE] == 0 ) 
+        ):
+            self.__delMarbleState__(self.__selectedMarble__, Game.STATE_SELECTED)
             self.__delMarbleState__(self.__selectedMarble__, Game.STATE_DRAGGING)
             self.__setSelectedMarble__([-1, -1])
             self.__selectionRect__ = None
@@ -284,25 +536,40 @@ class Game:
         if event.button == 1:
             if self.__hasMarbleState__(self.__selectedMarble__,
                                        Game.STATE_DRAGGING):
-                print "Player released and was dragging"
-                self.__delMarbleState__([self.__selectedMarble__[Game.P_IDX_X],
-                                         self.__selectedMarble__[Game.P_IDX_Y]],
-                                        Game.STATE_DRAGGING)
                 flipMarble = self.__selectedMarble__
                 if not self.__canSelectMarble__(marble_x, marble_y):
+                    self.__delMarbleState__(self.__selectedMarble__, Game.STATE_DRAGGING)
+                    self.__delMarbleState__(self.__selectedMarble__, Game.STATE_SELECTED)
                     self.__setSelectedMarble__([-1, -1])
                     return
-                self.__setSelectedMarble__([-1, -1])
+                self.__addMarbleState__(flipMarble, Game.STATE_PLAYERTOUCHED)
+                self.__addMarbleState__([marble_x, marble_y], Game.STATE_PLAYERTOUCHED)
                 self.__flipMarbles__(flipMarble, [marble_x, marble_y])
+                self.__setSelectedMarble__([-1, -1])
+                for marble in [[marble_x, marble_y], flipMarble]:
+                    for state in [Game.STATE_SELECTED, Game.STATE_DRAGGING]:
+                        self.__delMarbleState__(marble, state)
+                        
                 self.__setGroupState__()
             else:
-                print "Player clicked and released but was not dragging"
                 self.__setSelectedMarble__([marble_x, marble_y])
                 self.__addMarbleState__([marble_x, marble_y], Game.STATE_PLAYERTOUCHED)
                 self.__setGroupState__()
         return
 
     def __mouseClicked__(self, event):
+        self.__sound_click__.play()
+
+        if self.__gamestate__ == Game.STATE_GAME_WIN:
+            return
+        elif self.__gamestate__ == Game.STATE_GAME_TITLE:
+            self.__sound_falling__.play()
+            self.__gamestate__ = Game.STATE_GAME_TITLE_FALLING
+            for row in self.__curMap__:
+                for col in row:
+                    col[Game.M_IDX_STATE] = Game.STATE_PLAYERTOUCHED | Game.STATE_FALLING
+            return
+
         mouse_x = event.pos[Game.P_IDX_X]
         mouse_y = event.pos[Game.P_IDX_Y]
         marble_x = ( (mouse_x - self.__curMapRect__.left) / Game.MARBLE_WIDTH)
@@ -320,6 +587,12 @@ class Game:
         self.__addMarbleState__([marble_x, marble_y], Game.STATE_PLAYERTOUCHED)
 
     def __setGroupState__(self, zap=False):
+        amount_by_type_with_moves = {
+            1: 0,
+            2: 0,
+            3: 0,
+            4: 0
+        }
         groups = {
             0: [],
             1: [],
@@ -343,6 +616,8 @@ class Game:
             x = 0
             for col in row:
                 if col[Game.M_IDX_TYPE] != 0:
+                    if col[Game.M_IDX_MOVES] > 0 and col[Game.M_IDX_MOVES] < 99 :
+                        amount_by_type_with_moves[col[Game.M_IDX_TYPE]] += 1
                     candidates = [
                                         # --X--
                         [x, y + 1]      # --C--
@@ -374,6 +649,15 @@ class Game:
                 x += 1
             y += 1
 
+        game_can_continue = False
+        for k, v in amount_by_type_with_moves.iteritems():
+            if v >= 3:
+                game_can_continue = True
+        if not game_can_continue:
+            for row in self.__curMap__:
+                for col in row:
+                    col[Game.M_IDX_STATE] = Game.STATE_DEAD
+
         for marble, group in groups.iteritems():
             for grp in group:
                 if len(grp) < 3:
@@ -387,7 +671,6 @@ class Game:
                 if not tpair:
                     continue
 
-                print "Marking group as falling: {}".format(grp)
                 for pair in grp:
                     if self.__hasMarbleState__([tpair[Game.P_IDX_X], tpair[Game.P_IDX_Y]],
                                                Game.STATE_SELECTED):
@@ -407,18 +690,19 @@ class Game:
                     pygame.quit()
                     return
                 elif event.type == pygame.KEYUP:
-                    if ( (pygame.key.get_pressed()[pygame.K_LCTRL]) and 
-                         (event.key == pygame.K_LEFT) and
-                         (self.__mapIndex__ > 0) ):
-                        self.__mapIndex__ -= 1
-                        self.__setMap__(maps[self.__mapIndex__])
-                        self.__setSelectedMarble__([-1, -1])
-                    elif ( (pygame.key.get_pressed()[pygame.K_LCTRL]) and 
-                           (event.key == pygame.K_RIGHT) and
-                           (self.__mapIndex__ < (len(maps)-1))):
-                        self.__mapIndex__ += 1
-                        self.__setMap__(maps[self.__mapIndex__])
-                        self.__setSelectedMarble__([-1, -1])
+                    if ( Game.DEBUG_MODE ):
+                        if ( (pygame.key.get_pressed()[pygame.K_LCTRL]) and 
+                             (event.key == pygame.K_LEFT) and
+                             (self.__mapIndex__ > 0) ):
+                            self.__mapIndex__ -= 1
+                            self.__setMap__(maps[self.__mapIndex__])
+                            self.__setSelectedMarble__([-1, -1])
+                        elif ( (pygame.key.get_pressed()[pygame.K_LCTRL]) and 
+                               (event.key == pygame.K_RIGHT) and
+                               (self.__mapIndex__ < (len(maps)-1))):
+                            self.__mapIndex__ += 1
+                            self.__setMap__(maps[self.__mapIndex__])
+                            self.__setSelectedMarble__([-1, -1])
                         
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     self.__mouseClicked__(event)
