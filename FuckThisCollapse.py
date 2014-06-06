@@ -1,3 +1,4 @@
+import sys
 import pygame
 import time
 import random
@@ -715,3 +716,10 @@ class Game:
                     self.__mouseReleased__(event)
             pygame.display.update()
         return
+
+def main(argc, argv):
+    game = Game()
+    return game.run()
+
+if __name__ == "__main__":
+    sys.exit(main(len(sys.argv), sys.argv))
